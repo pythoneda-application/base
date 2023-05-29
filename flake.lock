@@ -1,0 +1,128 @@
+{
+  "nodes": {
+    "flake-utils": {
+      "locked": {
+        "lastModified": 1652776076,
+        "narHash": "sha256-gzTw/v1vj4dOVbpBSJX4J0DwUR6LIyXo7/SuuTJp1kM=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "04c1b180862888302ddfb2e3ad9eaa63afc60cf8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "ref": "v1.0.0",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "nixos": {
+      "locked": {
+        "lastModified": 1685314633,
+        "narHash": "sha256-8LXBPqTQXl5ofkjpJ18JcbmLJ/lWDoMxtUwiDYv0wro=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "c8a17ce7abc03c50cd072e9e6c9b389c5f61836b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-22.11",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "poetry2nix": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixos"
+        ]
+      },
+      "locked": {
+        "lastModified": 1651700095,
+        "narHash": "sha256-xeo702X83g7s2J22AAvtN/FkB1M0TUbZ+SGuMMNzk8s=",
+        "owner": "nix-community",
+        "repo": "poetry2nix",
+        "rev": "b00b6b6ef8471e912f2f09e826ca9acc127cee4f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "ref": "v1.28.0",
+        "repo": "poetry2nix",
+        "type": "github"
+      }
+    },
+    "pythoneda": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixos": [
+          "nixos"
+        ],
+        "poetry2nix": [
+          "poetry2nix"
+        ]
+      },
+      "locked": {
+        "lastModified": 1685369385,
+        "narHash": "sha256-rSoqw0ozAKzQIkq0/hclqcyEbs/MtWw0P2ddZQm1+0E=",
+        "owner": "rydnr",
+        "repo": "pythoneda",
+        "rev": "1c54611255ccf55b084862243275aae150841e06",
+        "type": "github"
+      },
+      "original": {
+        "owner": "rydnr",
+        "ref": "0.0.1a4",
+        "repo": "pythoneda",
+        "type": "github"
+      }
+    },
+    "pythoneda-infrastructure-layer": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixos": [
+          "nixos"
+        ],
+        "poetry2nix": [
+          "poetry2nix"
+        ],
+        "pythoneda": [
+          "pythoneda"
+        ]
+      },
+      "locked": {
+        "lastModified": 1685370238,
+        "narHash": "sha256-fFYwQQiKVbuxis5dV9aBWpaXFZwvElpV3dQTMoxQ8lE=",
+        "owner": "rydnr",
+        "repo": "pythoneda-infrastructure-layer",
+        "rev": "c2d72d758c6dbc09f7185345e6d6cec55efa949f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "rydnr",
+        "ref": "0.0.1a1",
+        "repo": "pythoneda-infrastructure-layer",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "flake-utils": "flake-utils",
+        "nixos": "nixos",
+        "poetry2nix": "poetry2nix",
+        "pythoneda": "pythoneda",
+        "pythoneda-infrastructure-layer": "pythoneda-infrastructure-layer"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
