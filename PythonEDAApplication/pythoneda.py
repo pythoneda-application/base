@@ -1,6 +1,4 @@
-#!/usr/bin/env python3
-
-from PythonEDA.application.bootstrap import get_interfaces, get_implementations
+from PythonEDAApplication.bootstrap import get_interfaces, get_implementations
 
 import asyncio
 import importlib

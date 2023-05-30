@@ -38,7 +38,7 @@
         packages = {
           pythoneda-application-layer = pythonPackages.buildPythonPackage rec {
             pname = "pythoneda-application-layer";
-            version = "0.0.1a2";
+            version = "0.0.1a3";
             projectDir = ./.;
             src = ./.;
             format = "pyproject";
