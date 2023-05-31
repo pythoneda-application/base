@@ -1,15 +1,16 @@
 [tool.poetry]
-name = "pythoneda-application-layer"
-version = "0.0.1a3"
+name = "pythoneda-application-base"
+version = "0.0.1a5"
 description = "Common classes for application layers of PythonEDA projects"
 authors = ["rydnr <github@acm-sl.org>"]
 readme = "README.md"
+homepage = "https://github.com/pythoneda-application/base"
 packages = [{include = "PythonEDAApplication"}]
 
 [tool.poetry.dependencies]
-python = "^3.7"
-pythoneda = "^0.0.1a5"
-pythoneda-infrastructure-layer = "^0.0.1a2"
+python = "^3.6"
+pythoneda = "^0.0.1a7"
+pythoneda-infrastructure-base = "^0.0.1a5"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0"

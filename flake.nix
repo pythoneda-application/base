@@ -10,13 +10,13 @@
       inputs.flake-utils.follows = "flake-utils";
     };
     pythoneda = {
-      url = "github:rydnr/pythoneda/0.0.1a5";
+      url = "github:pythoneda/base/0.0.1a7";
       inputs.nixos.follows = "nixos";
       inputs.flake-utils.follows = "flake-utils";
       inputs.poetry2nix.follows = "poetry2nix";
     };
-    pythoneda-infrastructure-layer = {
-      url = "github:rydnr/pythoneda-infrastructure-layer/0.0.1a2";
+    pythoneda-infrastructure-base = {
+      url = "github:pythoneda-infrastructure/base/0.0.1a5";
       inputs.nixos.follows = "nixos";
       inputs.flake-utils.follows = "flake-utils";
       inputs.poetry2nix.follows = "poetry2nix";
@@ -34,11 +34,12 @@
           "Common classes for application layers of PythonEDA projects";
         license = pkgs.lib.licenses.gpl3;
         maintainers = with pkgs.lib.maintainers; [ ];
+        homepage = "https://github.com/pythoneda-application/base";
       in rec {
         packages = {
-          pythoneda-application-layer = pythonPackages.buildPythonPackage rec {
-            pname = "pythoneda-application-layer";
-            version = "0.0.1a3";
+          pythoneda-application-base = pythonPackages.buildPythonPackage rec {
+            pname = "pythoneda-application-base";
+            version = "0.0.1a5";
             projectDir = ./.;
             src = ./.;
             format = "pyproject";
@@ -46,21 +47,17 @@
             nativeBuildInputs = [ pkgs.poetry ];
             propagatedBuildInputs = with pythonPackages; [
               pythoneda.packages.${system}.pythoneda
-              pythoneda-infrastructure-layer.packages.${system}.pythoneda-infrastructure-layer
+              pythoneda-infrastructure-base.packages.${system}.pythoneda-infrastructure-base
             ];
 
             checkInputs = with pythonPackages; [ pytest ];
 
             pythonImportsCheck = [ ];
 
-            meta = with pkgs.lib; {
-              inherit description license homepage maintainers;
-            };
+            meta = { inherit description license homepage maintainers; };
           };
-          default = packages.pythoneda-application-layer;
-          meta = with lib; {
-            inherit description license homepage maintainers;
-          };
+          default = packages.pythoneda-application-base;
+          meta = { inherit description license homepage maintainers; };
         };
         defaultPackage = packages.default;
         devShell = pkgs.mkShell {
