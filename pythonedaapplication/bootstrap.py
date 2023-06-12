@@ -1,3 +1,23 @@
+"""
+pythonedaapplication/bootstrap.py
+
+This file performs the bootstrapping af PythonEDA applications.
+
+Copyright (C) 2023-today rydnr's pythoneda-application/base
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+"""
 import importlib
 import importlib.util
 import inspect
@@ -14,6 +34,13 @@ if base_folder not in sys.path:
     sys.path.append(base_folder)
 
 def iter_submodules(package):
+    """
+    Iterates over the modules in given package.
+    :param package: The package.
+    :type package: Package
+    :return: The list of modules.
+    :rtype: List
+    """
     result = []
     package_path = Path(package.__path__[0])
     for py_file in package_path.glob('**/*.py'):
@@ -28,6 +55,15 @@ def iter_submodules(package):
     return result
 
 def get_interfaces(iface, package):
+    """
+    Retrieves the interfaces extending given one in a package.
+    :param iface: The parent interface.
+    :type iface: Object
+    :param package: The package.
+    :type package: Package
+    :return: The list of intefaces in given module.
+    :rtype: List
+    """
     matches = []
     for module in iter_submodules(package):
         try:
@@ -42,6 +78,13 @@ def get_interfaces(iface, package):
     return matches
 
 def get_implementations(interface):
+    """
+    Retrieves the implementations for given interface.
+    :param interface: The interface.
+    :type interface: Object
+    :return: The list of implementations.
+    :rtype: List
+    """
     implementations = []
     submodules = iter_submodules(infrastructure)
     for module in submodules:
