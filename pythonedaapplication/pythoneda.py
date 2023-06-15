@@ -18,7 +18,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from PythonEDAApplication.bootstrap import get_interfaces, get_implementations
+from pythonedaapplication.bootstrap import get_interfaces, get_implementations
 
 import asyncio
 import importlib

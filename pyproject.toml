@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pythoneda-application-base"
-version = "0.0.1a7"
+version = "0.0.1a8"
 description = "Common classes for application layers of PythonEDA projects"
 authors = ["rydnr <github@acm-sl.org>"]
 readme = "README.md"
@@ -10,7 +10,7 @@ packages = [{include = "pythonedaapplication"}]
 [tool.poetry.dependencies]
 python = "^3.8"
 pythoneda-base = "^0.0.1a12"
-pythoneda-infrastructure-base = "^0.0.1a7"
+pythoneda-infrastructure-base = "^0.0.1a8"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0"
