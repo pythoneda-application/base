@@ -39,7 +39,10 @@
         shared = import ./nix/devShells.nix;
         pythoneda-application-base-for =
           { version, pythoneda-base, pythoneda-infrastructure-base, python }:
-          python.pkgs.buildPythonPackage rec {
+          let
+            pythonMajorVersion =
+              builtins.head (builtins.splitVersion python.version);
+          in python.pkgs.buildPythonPackage rec {
             pname = "pythoneda-application-base";
             inherit version;
             projectDir = ./.;
@@ -59,8 +62,9 @@
             preBuild = ''
               python -m venv .env
               source .env/bin/activate
-              pip install ${pythoneda-base}/dist/pythoneda_base-${pythoneda-base.version}-py3-none-any.whl
-              pip install ${pythoneda-infrastructure-base}/dist/pythoneda_infrastructure_base-${pythoneda-infrastructure-base.version}-py3-none-any.whl
+              pip install ${pythoneda-base}/dist/pythoneda_base-${pythoneda-base.version}-py${pythonMajorVersion}-none-any.whl
+              pip install ${pythoneda-infrastructure-base}/dist/pythoneda_infrastructure_base-${pythoneda-infrastructure-base.version}-py${pythonMajorVersion}-none-any.whl
+              rm -rf .env
             '';
             postInstall = ''
               mkdir $out/dist
