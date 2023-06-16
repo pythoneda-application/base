@@ -32,30 +32,6 @@
         "type": "github"
       }
     },
-    "poetry2nix": {
-      "inputs": {
-        "flake-utils": [
-          "flake-utils"
-        ],
-        "nixpkgs": [
-          "nixos"
-        ]
-      },
-      "locked": {
-        "lastModified": 1651700095,
-        "narHash": "sha256-xeo702X83g7s2J22AAvtN/FkB1M0TUbZ+SGuMMNzk8s=",
-        "owner": "nix-community",
-        "repo": "poetry2nix",
-        "rev": "b00b6b6ef8471e912f2f09e826ca9acc127cee4f",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-community",
-        "ref": "v1.28.0",
-        "repo": "poetry2nix",
-        "type": "github"
-      }
-    },
     "pythoneda-base": {
       "inputs": {
         "flake-utils": [
@@ -63,22 +39,19 @@
         ],
         "nixos": [
           "nixos"
-        ],
-        "poetry2nix": [
-          "poetry2nix"
         ]
       },
       "locked": {
-        "lastModified": 1686758262,
-        "narHash": "sha256-k61NKVVCTbnagD+1C6tDp374dc7s86/SAQ0vbKgwUis=",
+        "lastModified": 1686902109,
+        "narHash": "sha256-+ZhT6HzsthnsTeJ9tBaQsjgbTcrSMKLvcq7rZKb4S/k=",
         "owner": "pythoneda",
         "repo": "base",
-        "rev": "aaa1b56b73c685db3598c3073283d37d032e6b80",
+        "rev": "696012eff86aa55a33e1ca5e261bb5457e24a75a",
         "type": "github"
       },
       "original": {
         "owner": "pythoneda",
-        "ref": "0.0.1a12",
+        "ref": "0.0.1a13",
         "repo": "base",
         "type": "github"
       }
@@ -91,24 +64,21 @@
         "nixos": [
           "nixos"
         ],
-        "poetry2nix": [
-          "poetry2nix"
-        ],
         "pythoneda-base": [
           "pythoneda-base"
         ]
       },
       "locked": {
-        "lastModified": 1686818550,
-        "narHash": "sha256-KY9s2djmZ3IKvoyGG9Ex1V+qZbpmSr0QbGg546ycOFY=",
+        "lastModified": 1686903570,
+        "narHash": "sha256-Yyz2YE6PXSmlrIhyppyiXTMUN8IWrlo+3rea8uZ65Hc=",
         "owner": "pythoneda-infrastructure",
         "repo": "base",
-        "rev": "53e1d3b3917461a5014964fdb31e43cf2042c778",
+        "rev": "129738f09a85cfe68b584bb47914b52190f89ec4",
         "type": "github"
       },
       "original": {
         "owner": "pythoneda-infrastructure",
-        "ref": "0.0.1a8",
+        "ref": "0.0.1a9",
         "repo": "base",
         "type": "github"
       }
@@ -117,7 +87,6 @@
       "inputs": {
         "flake-utils": "flake-utils",
         "nixos": "nixos",
-        "poetry2nix": "poetry2nix",
         "pythoneda-base": "pythoneda-base",
         "pythoneda-infrastructure-base": "pythoneda-infrastructure-base"
       }
