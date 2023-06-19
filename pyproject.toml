@@ -13,7 +13,7 @@ pythoneda-base = "^0.0.1a14"
 pythoneda-infrastructure-base = "^0.0.1a10"
 
 [tool.poetry.dev-dependencies]
-pytest = "^7.0"
+pytest = "^7.2.0"
 
 [build-system]
 requires = ["poetry-core"]
