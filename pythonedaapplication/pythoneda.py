@@ -1,5 +1,5 @@
 """
-pythonedaapplication/pythoneda.py
+pythonedaapplication/pythonedaapp.py
 
 This file performs the bootstrapping af PythonEDA applications.
 
@@ -18,15 +18,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """
-from pythonedaapplication.bootstrap import get_interfaces, get_implementations
-
-import asyncio
-import importlib
-import importlib.util
-import logging
 import os
+from pathlib import Path
+import pkgutil
 import sys
-from typing import Callable, Dict
+from typing import Callable, Dict, List
+import warnings
 
 class PythonEDA():
     """
@@ -47,14 +44,66 @@ class PythonEDA():
 
     _singleton = None
 
-    def __init__(self):
+    def __init__(self, file=__file__):
         """
         Initializes the instance.
+        :param file: The file where this specific instance is defined.
+        :type file: str
         """
         super().__init__()
         self._primaryPorts = []
+        self.fix_syspath(file)
+        self._domain_packages, self._domain_modules, self._infrastructure_packages, self._infrastructure_modules = self.load_packages()
+        self._domain_ports = self.find_domain_ports(self._domain_modules)
+        self.initialize()
 
-    def get_primary_ports(self):
+    @property
+    def domain_packages(self) -> List:
+        """
+        Retrieves the domain packages.
+        :return: Such packages.
+        :rtype: List
+        """
+        return self._domain_packages
+
+    @property
+    def domain_modules(self) -> List:
+        """
+        Retrieves the domain modules.
+        :return: Such modules.
+        :rtype: List
+        """
+        return self._domain_modules;
+
+    @property
+    def domain_ports(self) -> List:
+        """
+        Retrieves the port interfaces.
+        :return: Such interfaces.
+        :rtype: List
+        """
+        return self._domain_ports;
+
+    @property
+    def infrastructure_packages(self) -> List:
+        """
+        Retrieves the infrastructure packages.
+        :return: Such packages.
+        :rtype: List
+        """
+        return self._infrastructure_packages
+
+    @property
+    def infrastructure_modules(self) -> List:
+        """
+        Retrieves the infrastructure modules.
+        :return: Such modules.
+        :rtype: List
+        """
+        return self._infrastructure_modules;
+
+    @property
+    def primary_ports(self) -> List:
         """
         Retrieves the primary ports found.
         :return: Such ports.
@@ -62,35 +111,82 @@ class PythonEDA():
         """
         return self._primaryPorts
 
-    @classmethod
-    async def main(cls):
+    def fix_syspath(self, file: str):
         """
-        Runs the application from the command line.
+        Fixes the sys.path collection to avoid duplicated entries for the specific project
+        this (sub)class is defined.
+        :param file: The file where this specific instance is defined.
+        :type file: str
         """
-        cls._singleton = PythonEDA()
-        mappings = {}
-        for port in cls.get_port_interfaces():
-            implementations = get_implementations(port)
-            if len(implementations) == 0:
-                logging.getLogger(__name__).critical(f'No implementations found for {port}')
-            else:
-                mappings.update({ port: implementations[0]() })
-        Ports.initialize(mappings)
-        cls._singleton._primaryPorts = get_implementations(PrimaryPort)
-        EventListener.find_listeners()
-        EventEmitter.register_receiver(cls._singleton)
-        loop = asyncio.get_running_loop()
-        loop.run_until_complete(await PythonEDA.instance().accept_input())
+        base_folder = str(Path().resolve())
+        current_folder = Path(file).resolve().parent
+        app_module = os.path.basename(current_folder)
+        if os.path.isdir(Path(base_folder) / app_module) and str(current_folder) in sys.path:
+            sys.path.remove(str(current_folder))
+        path_to_remove = None
+        for path in sys.path:
+            if os.path.isdir(Path(path) / app_module):
+                path_to_remove = path
+                break
+        if path_to_remove:
+            sys.path.remove(str(path_to_remove))
+        if base_folder not in sys.path:
+            sys.path.append(base_folder)
 
-    @classmethod
-    def get_port_interfaces(cls):
+    def load_packages(self) -> tuple:
+        """
+        Loads the PythonEDA-related packages.
+        :return: A tuple consisting of (domain packages, domain modules, infrastructure packages, infrastructure modules).
+        :rtype: tuple
+        """
+        domain_packages = []
+        domain_modules = []
+        infrastructure_packages = []
+        infrastructure_modules = []
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
+            for importer, pkg, ispkg in pkgutil.iter_modules():
+                if ispkg:
+                    loader = importer.find_module(pkg)
+                    try:
+                        package = loader.load_module(pkg)
+                        if bootstrap.is_domain_package(package):
+                            domain_packages.append(package)
+                            domain_packages.extend(bootstrap.get_all_subpackages(package))
+                        if bootstrap.is_infrastructure_package(package):
+                            infrastructure_packages.append(package)
+                            infrastructure_packages.extend(bootstrap.get_all_subpackages(package))
+                    except ModuleNotFoundError:
+                        pass
+        for package in domain_packages:
+            domain_modules.extend(bootstrap.get_submodules(package))
+        for package in infrastructure_packages:
+            infrastructure_modules.extend(bootstrap.get_submodules(package))
+
+        return (domain_packages, domain_modules, infrastructure_packages, infrastructure_modules)
+
+    def find_domain_ports(self, modules: List) -> List:
         """
         Retrieves the port interfaces.
+        :param modules: The modules to process.
+        :type modules: List
         :return: Such interfaces.
         :rtype: List
         """
-        # this is to pass the domain module, so I can get rid of the `import domain`
-        return get_interfaces(Port, importlib.import_module('.'.join(Event.__module__.split('.')[:-1])))
+        result = []
+        for module in modules:
+            result.extend(bootstrap.get_interfaces_in_module(Port, module))
+        return result
+
+    @classmethod
+    async def main(cls, file=__file__):
+        """
+        Runs the application from the command line.
+        :param file: The file where this specific instance is defined.
+        :type file: str
+        """
+        cls._singleton = cls(file)
+        await cls.instance().accept_input()
 
     @classmethod
     def instance(cls):
@@ -100,6 +196,31 @@ class PythonEDA():
         :rtype: PythonEDA
         """
         return cls._singleton
+
+    def initialize(self):
+        """
+        Initializes this instance.
+        """
+        mappings = {}
+        print(f'domain ports -> {self.domain_ports}')
+        print(f'domain packages -> {self.domain_packages}')
+        print(f'domain modules -> {self.domain_modules}')
+        print(f'infrastructure packages -> {self.infrastructure_packages}')
+        print(f'infrastructure modules -> {self.infrastructure_modules}')
+        for port in self.domain_ports:
+            implementations = bootstrap.get_adapters(port, self.domain_packages)
+            if len(implementations) == 0:
+                logging.getLogger(__name__).critical(f'No implementations found for {port}')
+            else:
+                mappings.update({ port: implementations[0]() })
+        from pythoneda.ports import Ports
+        Ports.initialize(mappings)
+        from pythoneda.primary_port import PrimaryPort
+        self._primaryPorts = bootstrap.get_adapters(PrimaryPort, self.domain_packages)
+        from pythoneda.event_listener import EventListener
+        EventListener.find_listeners()
+        from pythoneda.event_emitter import EventEmitter
+        EventEmitter.register_receiver(self)
 
     @classmethod
     def delegate_priority(cls, primaryPort) -> int:
@@ -116,7 +237,7 @@ class PythonEDA():
         """
         Notification the application has been launched from the CLI.
         """
-        for primaryPort in sorted(self.get_primary_ports(), key=PythonEDA.delegate_priority):
+        for primaryPort in sorted(self.primary_ports, key=self.__class__.delegate_priority):
             port = primaryPort()
             await port.accept(self)
 
@@ -160,20 +281,25 @@ class PythonEDA():
         """
         result = None
 
-        spec = importlib.util.spec_from_file_location("_log_config", os.path.join("PythonEDA", os.path.join("infrastructure", f"_log_config.py")))
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        entry = {}
-        configure_logging_function = getattr(module, "configure_logging", None)
-        if callable(configure_logging_function):
-            result = configure_logging_function
-        else:
-            print(f"Error in PythonEDA/infrastructure/_log_config.py: configure_logging")
+        for module in cls.instance().infrastructure_modules:
+            if module.__name__ == "_log_config.py":
+                spec.loader.exec_module(module)
+                entry = {}
+                configure_logging_function = getattr(module, "configure_logging", None)
+                if callable(configure_logging_function):
+                    result = configure_logging_function
+                else:
+                    print(f"Error in {module.__file__}: configure_logging")
         return result
 
-from pythoneda.event import Event
-from pythoneda.event_emitter import EventEmitter
-from pythoneda.event_listener import EventListener
-from pythoneda.port import Port
-from pythoneda.ports import Ports
-from pythoneda.primary_port import PrimaryPort
+from pythonedaapplication import bootstrap
+import asyncio
+import importlib
+import importlib.util
+import logging
+import os
+import sys
+
+if __name__ == "__main__":
+
+    asyncio.run(PythonEDA.main(__file__))

@@ -29,32 +29,40 @@ import sys
 from typing import Dict, List
 import warnings
 
-base_folder = str(Path(__file__).resolve().parent.parent)
-if base_folder not in sys.path:
-    sys.path.append(base_folder)
-
-def iter_submodules(package):
+def is_domain_package(package) -> bool:
     """
-    Iterates over the modules in given package.
+    Checks if given package is marked as domain package.
     :param package: The package.
     :type package: Package
-    :return: The list of modules.
-    :rtype: List
+    :return: True if so.
+    :rtype: bool
     """
-    result = []
-    package_path = Path(package.__path__[0])
-    for py_file in package_path.glob('**/*.py'):
-        if py_file.is_file():
-            relative_path = py_file.relative_to(package_path).with_suffix('')
-            module_name = f"{package.__name__}.{relative_path.as_posix().replace('/', '.')}"
-            if not module_name in (list(sys.modules.keys())):
-                spec = importlib.util.spec_from_file_location(module_name, py_file)
-                module = importlib.util.module_from_spec(spec)
-                importlib.import_module(module.__name__)
-            result.append(sys.modules[module_name])
-    return result
+    return is_package_of_type(package, "domain")
 
-def get_interfaces(iface, package):
+def is_infrastructure_package(package) -> bool:
+    """
+    Checks if given package is marked as infrastructure package.
+    :param package: The package.
+    :type package: Package
+    :return: True if so.
+    :rtype: bool
+    """
+    return is_package_of_type(package, "infrastructure")
+
+def is_package_of_type(package, type: str) -> bool:
+    """
+    Checks if given package is marked as of given type.
+    :param package: The package.
+    :type package: Package
+    :param type: The type of package.
+    :type type: str
+    :return: True if so.
+    :rtype: bool
+    """
+    package_path = Path(package.__path__[0])
+    return (package_path / f".pythoneda-{type}").exists()
+
+def get_interfaces_in_package(iface, package):
     """
     Retrieves the interfaces extending given one in a package.
     :param iface: The parent interface.
@@ -65,19 +73,33 @@ def get_interfaces(iface, package):
     :rtype: List
     """
     matches = []
-    for module in iter_submodules(package):
-        try:
-            with warnings.catch_warnings():
-                warnings.simplefilter('ignore', category=DeprecationWarning)
-                for class_name, cls in inspect.getmembers(module, inspect.isclass):
-                    if (issubclass(cls, iface) and
-                        cls != iface):
-                        matches.append(cls)
-        except ImportError:
-            pass
+    for module in get_submodules(package):
+        matches.extend(get_interfaces_in_module(iface, module))
     return matches
 
-def get_implementations(interface):
+def get_interfaces_in_module(iface, module):
+    """
+    Retrieves the interfaces extending given one in a module.
+    :param iface: The parent interface.
+    :type iface: Object
+    :param module: The module.
+    :type module: Module
+    :return: The list of intefaces in given module.
+    :rtype: List
+    """
+    matches = []
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=DeprecationWarning)
+            for class_name, cls in inspect.getmembers(module, inspect.isclass):
+                if (issubclass(cls, iface) and
+                    cls != iface):
+                    matches.append(cls)
+    except ImportError:
+        pass
+    return matches
+
+def get_adapters(interface, packages):
     """
     Retrieves the implementations for given interface.
     :param interface: The interface.
@@ -86,18 +108,52 @@ def get_implementations(interface):
     :rtype: List
     """
     implementations = []
-    submodules = iter_submodules(infrastructure)
-    for module in submodules:
-        try:
-            with warnings.catch_warnings():
-                warnings.simplefilter('ignore', category=DeprecationWarning)
-                for class_name, cls in inspect.getmembers(module, inspect.isclass):
-                    if (issubclass(cls, interface) and
-                        cls != interface):
-                        implementations.append(cls)
-        except ImportError as err:
-            print(f'Error importing {module}: {err}')
+
+    for pkg in packages:
+        submodules = get_submodules(modname)
+        for module in submodules:
+            try:
+                with warnings.catch_warnings():
+                    warnings.simplefilter('ignore', category=DeprecationWarning)
+                    for class_name, cls in inspect.getmembers(module, inspect.isclass):
+                        if (issubclass(cls, interface) and
+                            cls != interface):
+                            implementations.append(cls)
+            except ImportError as err:
+                print(f'Error importing {module}: {err}')
 
     return implementations
 
-import infrastructure
+def get_all_subpackages(package) -> List:
+    """
+    Retrieves all subpackages of given package.
+    :param package: The parent package.
+    :type package: Package
+    :return: The subpackages.
+    :rtype: List
+    """
+    result = []
+    for importer, pkg, ispkg in pkgutil.iter_modules(package.__path__):
+        if ispkg:
+            loader = importer.find_module(pkg)
+            try:
+                current_pkg = loader.load_module(pkg)
+                result.append(current_pkg)
+                result.extend(get_all_subpackages(current_pkg))
+            except ModuleNotFoundError:
+                pass
+    return result
+
+def get_submodules(package) -> List:
+    """
+    Retrieves the submodules under given package.
+    :param package: The package.
+    :type package: Package
+    :return: The list of modules.
+    :rtype: List
+    """
+    result = []
+    for importer, pkg, ispkg in pkgutil.iter_modules(package.__path__):
+        if not ispkg:
+            result.append(pkg)
+    return result
