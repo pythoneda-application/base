@@ -179,13 +179,13 @@ class PythonEDA():
         return result
 
     @classmethod
-    async def main(cls, file=__file__):
+    async def main(cls):
         """
         Runs the application from the command line.
         :param file: The file where this specific instance is defined.
         :type file: str
         """
-        cls._singleton = cls(file)
+        cls._singleton = cls()
         await cls.instance().accept_input()
 
     @classmethod
