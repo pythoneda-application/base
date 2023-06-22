@@ -9,14 +9,14 @@ rec {
     echo;
     echo -e " \033[32m             _   _                          \033[35m_\033[0m";
     echo -e " \033[32m            | | | |                        \033[35m| | \033[37mGPLv3\033[0m";
-    echo -e " \033[32m _ __  _   _| |_| |__   ___  _ __   \033[34m___  \033[35m__| | \033[36m__ _ \033[32mhttps://github.com/nixos/nixpkgs/$NIXPKGSRELEASE\033[0m";
-    echo -e " \033[32m| '_ \| | | | __| '_ \ / _ \| '_ \ \033[34m/ _ \\\\\033[35m/ _\` |\033[36m/ _\` |\033[33mhttps://github.com/pythoneda-application/base\033[0m";
+    echo -e " \033[32m _ __  _   _| |_| |__   ___  _ __   \033[34m___  \033[35m__| | \033[36m__ _ \033[32mhttps://github.com/nixos/nixpkgs/tree/$NIXPKGSRELEASE\033[0m";
+    echo -e " \033[32m| '_ \| | | | __| '_ \ / _ \| '_ \ \033[34m/ _ \\\\\033[35m/ _\` |\033[36m/ _\` |\033[33mhttps://github.com/pythoneda-application/base/tree/$PVERSION\033[0m";
     echo -e " \033[32m| |_) | |_| | |_| | | | (_) | | | |\033[34m  __/\033[35m (_| |\033[36m (_| |\033[34mhttps://github.com/pythoneda-infrastructure/base\033[0m";
     echo -e " \033[32m| .__/ \__, |\__|_| |_|\___/|_| |_|\033[34m\___|\033[35m\__,_|\033[36m\__,_|\033[35mhttps://github.com/pythoneda/base\033[0m";
     echo -e " \033[32m| |     __/ |                                       \033[36mhttps://github.com/pythoneda\033[0m";
-    echo -e " \033[32m|_|    |___/           \033[33mBASE (APPLICATION)           \033[37mhttps://patreon.com/rydnr\033[0m";
+    echo -e " \033[32m|_| \033[31mA\033[36mD\033[32m |___/                 \033[33mBASE                   \033[37mhttps://patreon.com/rydnr\033[0m";
     echo;
-    echo " Thank you for using PythonEDA, and for your appreciation of free software.";
+    echo " Thank you for using pythoneda-application/base, PythonEDA in general, and for your appreciation of free software.";
     echo;
     export PYTHONPATH="$(python $PYTHONEDABASE/scripts/fix_pythonpath.py)";
   '';
