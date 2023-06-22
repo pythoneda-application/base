@@ -73,8 +73,8 @@ def get_interfaces_in_package(iface, package):
     :rtype: List
     """
     matches = []
-    for module in get_submodules(package):
-        matches.extend(get_interfaces_in_module(iface, module))
+    for module_name in get_submodule_names(package):
+        matches.extend(get_interfaces_in_module(iface, module_name))
     return matches
 
 def get_interfaces_in_module(iface, module):
@@ -109,15 +109,15 @@ def get_adapters(interface, packages):
     """
     implementations = []
 
+    import abc
     for pkg in packages:
-        submodules = get_submodules(modname)
+        submodules = get_submodules(pkg)
         for module in submodules:
             try:
                 with warnings.catch_warnings():
                     warnings.simplefilter('ignore', category=DeprecationWarning)
                     for class_name, cls in inspect.getmembers(module, inspect.isclass):
-                        if (issubclass(cls, interface) and
-                            cls != interface):
+                        if (inspect.isclass(cls)) and (issubclass(cls, interface)) and (cls != interface) and (not issubclass(cls, abc.ABC)):
                             implementations.append(cls)
             except ImportError as err:
                 print(f'Error importing {module}: {err}')
@@ -144,7 +144,7 @@ def get_all_subpackages(package) -> List:
                 pass
     return result
 
-def get_submodules(package) -> List:
+def get_submodule_names(package) -> List:
     """
     Retrieves the submodules under given package.
     :param package: The package.
@@ -156,4 +156,23 @@ def get_submodules(package) -> List:
     for importer, pkg, ispkg in pkgutil.iter_modules(package.__path__):
         if not ispkg:
             result.append(pkg)
+    return result
+
+def get_submodules(package) -> List:
+    """
+    Retrieves the submodules under given package.
+    :param package: The package.
+    :type package: Package
+    :return: The list of modules.
+    :rtype: List
+    """
+    result = []
+    for importer, pkg, ispkg in pkgutil.iter_modules(package.__path__):
+        if not ispkg:
+            loader = importer.find_module(pkg)
+            try:
+                current_pkg = loader.load_module(pkg)
+                result.append(current_pkg)
+            except ModuleNotFoundError:
+                pass
     return result

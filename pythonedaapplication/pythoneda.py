@@ -51,7 +51,7 @@ class PythonEDA():
         :type file: str
         """
         super().__init__()
-        self._primaryPorts = []
+        self._primary_ports = []
         self.fix_syspath(file)
         self._domain_packages, self._domain_modules, self._infrastructure_packages, self._infrastructure_modules = self.load_packages()
         self._domain_ports = self.find_domain_ports(self._domain_modules)
@@ -109,7 +109,7 @@ class PythonEDA():
         :return: Such ports.
         :rtype: List
         """
-        return self._primaryPorts
+        return self._primary_ports
 
     def fix_syspath(self, file: str):
         """
@@ -174,6 +174,7 @@ class PythonEDA():
         :rtype: List
         """
         result = []
+        from pythoneda.port import Port
         for module in modules:
             result.extend(bootstrap.get_interfaces_in_module(Port, module))
         return result
@@ -202,11 +203,6 @@ class PythonEDA():
         Initializes this instance.
         """
         mappings = {}
-        print(f'domain ports -> {self.domain_ports}')
-        print(f'domain packages -> {self.domain_packages}')
-        print(f'domain modules -> {self.domain_modules}')
-        print(f'infrastructure packages -> {self.infrastructure_packages}')
-        print(f'infrastructure modules -> {self.infrastructure_modules}')
         for port in self.domain_ports:
             implementations = bootstrap.get_adapters(port, self.domain_packages)
             if len(implementations) == 0:
@@ -216,7 +212,7 @@ class PythonEDA():
         from pythoneda.ports import Ports
         Ports.initialize(mappings)
         from pythoneda.primary_port import PrimaryPort
-        self._primaryPorts = bootstrap.get_adapters(PrimaryPort, self.domain_packages)
+        self._primary_ports = bootstrap.get_adapters(PrimaryPort, self.infrastructure_packages)
         from pythoneda.event_listener import EventListener
         EventListener.find_listeners()
         from pythoneda.event_emitter import EventEmitter
@@ -237,8 +233,8 @@ class PythonEDA():
         """
         Notification the application has been launched from the CLI.
         """
-        for primaryPort in sorted(self.primary_ports, key=self.__class__.delegate_priority):
-            port = primaryPort()
+        for primary_port in sorted(self.primary_ports, key=self.__class__.delegate_priority):
+            port = primary_port()
             await port.accept(self)
 
     async def accept(self, event): # : Event) -> Event:
@@ -253,6 +249,8 @@ class PythonEDA():
         if event:
             firstEvents = []
             logging.getLogger(__name__).info(f'Accepting event {event}')
+            from pythoneda.event_listener import EventListener
+            EventListener.find_listeners()
             for listenerClass in EventListener.listeners_for(event.__class__):
                 resultingEvents = await listenerClass.accept(event)
                 if resultingEvents and len(resultingEvents) > 0:
@@ -270,7 +268,8 @@ class PythonEDA():
         :type logConfig: Dict[str, bool]
         """
         module_function = self.__class__.get_log_config()
-        module_function(logConfig["verbose"], logConfig["trace"], logConfig["quiet"])
+        if module_function:
+            module_function(logConfig["verbose"], logConfig["trace"], logConfig["quiet"])
 
     @classmethod
     def get_log_config(cls) -> Callable:
@@ -282,8 +281,9 @@ class PythonEDA():
         result = None
 
         for module in cls.instance().infrastructure_modules:
-            if module.__name__ == "_log_config.py":
-                spec.loader.exec_module(module)
+
+            if module.__name__ == "_log_config":
+#                spec.loader.exec_module(module)
                 entry = {}
                 configure_logging_function = getattr(module, "configure_logging", None)
                 if callable(configure_logging_function):
