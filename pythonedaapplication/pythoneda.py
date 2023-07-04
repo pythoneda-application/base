@@ -147,21 +147,22 @@ class PythonEDA():
             warnings.filterwarnings("ignore", category=DeprecationWarning)
             for importer, pkg, ispkg in pkgutil.iter_modules():
                 if ispkg:
-                    loader = importer.find_module(pkg)
-                    try:
-                        package = loader.load_module(pkg)
-                        if bootstrap.is_domain_package(package):
-                            domain_packages.append(package)
-                            domain_packages.extend(bootstrap.get_all_subpackages(package))
-                        if bootstrap.is_infrastructure_package(package):
-                            infrastructure_packages.append(package)
-                            infrastructure_packages.extend(bootstrap.get_all_subpackages(package))
-                    except ModuleNotFoundError:
-                        pass
-        for package in domain_packages:
-            domain_modules.extend(bootstrap.get_submodules(package))
-        for package in infrastructure_packages:
-            infrastructure_modules.extend(bootstrap.get_submodules(package))
+                    if pkg.startswith("pythoneda"):
+                        loader = importer.find_module(pkg)
+                        try:
+                            package = loader.load_module(pkg)
+                            domain_package = bootstrap.is_domain_package(package)
+                            infrastructure_package = bootstrap.is_infrastructure_package(package)
+                            if domain_package or infrastructure_package:
+                                submodules = bootstrap.import_submodules(package, True)
+                            if domain_package:
+                                domain_packages.append(package)
+                                domain_modules.extend(submodules.values())
+                            if infrastructure_package:
+                                infrastructure_packages.append(package)
+                                infrastructure_modules.extend(submodules.values())
+                        except ModuleNotFoundError as err:
+                            logging.getLogger(__name__).critical(f'Cannot import {package.__name__}: Missing dependency {err.name}')
 
         return (domain_packages, domain_modules, infrastructure_packages, infrastructure_modules)
 
@@ -204,7 +205,7 @@ class PythonEDA():
         """
         mappings = {}
         for port in self.domain_ports:
-            implementations = bootstrap.get_adapters(port, self.domain_packages)
+            implementations = bootstrap.get_adapters(port, self.infrastructure_modules)
             if len(implementations) == 0:
                 logging.getLogger(__name__).critical(f'No implementations found for {port}')
             else:
@@ -212,7 +213,7 @@ class PythonEDA():
         from pythoneda.ports import Ports
         Ports.initialize(mappings)
         from pythoneda.primary_port import PrimaryPort
-        self._primary_ports = bootstrap.get_adapters(PrimaryPort, self.infrastructure_packages)
+        self._primary_ports = bootstrap.get_adapters(PrimaryPort, self.infrastructure_modules)
         from pythoneda.event_listener import EventListener
         EventListener.find_listeners()
         from pythoneda.event_emitter import EventEmitter

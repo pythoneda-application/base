@@ -62,21 +62,6 @@ def is_package_of_type(package, type: str) -> bool:
     package_path = Path(package.__path__[0])
     return (package_path / f".pythoneda-{type}").exists()
 
-def get_interfaces_in_package(iface, package):
-    """
-    Retrieves the interfaces extending given one in a package.
-    :param iface: The parent interface.
-    :type iface: Object
-    :param package: The package.
-    :type package: Package
-    :return: The list of intefaces in given module.
-    :rtype: List
-    """
-    matches = []
-    for module_name in get_submodule_names(package):
-        matches.extend(get_interfaces_in_module(iface, module_name))
-    return matches
-
 def get_interfaces_in_module(iface, module):
     """
     Retrieves the interfaces extending given one in a module.
@@ -99,80 +84,50 @@ def get_interfaces_in_module(iface, module):
         pass
     return matches
 
-def get_adapters(interface, packages):
+def get_adapters(interface, modules: List):
     """
     Retrieves the implementations for given interface.
     :param interface: The interface.
     :type interface: Object
+    :param modules: The modules to inspect.
+    :type modules: List
     :return: The list of implementations.
     :rtype: List
     """
     implementations = []
 
     import abc
-    for pkg in packages:
-        submodules = get_submodules(pkg)
-        for module in submodules:
-            try:
-                with warnings.catch_warnings():
-                    warnings.simplefilter('ignore', category=DeprecationWarning)
-                    for class_name, cls in inspect.getmembers(module, inspect.isclass):
-                        if (inspect.isclass(cls)) and (issubclass(cls, interface)) and (cls != interface) and (not issubclass(cls, abc.ABC)):
-                            implementations.append(cls)
-            except ImportError as err:
-                print(f'Error importing {module}: {err}')
+    for module in modules:
+        try:
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore', category=DeprecationWarning)
+                for class_name, cls in inspect.getmembers(module, inspect.isclass):
+                    if (inspect.isclass(cls)) and (issubclass(cls, interface)) and (cls != interface) and (abc.ABC not in cls.__bases__):
+                        implementations.append(cls)
+        except ImportError as err:
+            print(f'Error importing {module}: {err}')
 
     return implementations
 
-def get_all_subpackages(package) -> List:
-    """
-    Retrieves all subpackages of given package.
-    :param package: The parent package.
-    :type package: Package
-    :return: The subpackages.
-    :rtype: List
-    """
-    result = []
-    for importer, pkg, ispkg in pkgutil.iter_modules(package.__path__):
-        if ispkg:
-            loader = importer.find_module(pkg)
-            try:
-                current_pkg = loader.load_module(pkg)
-                result.append(current_pkg)
-                result.extend(get_all_subpackages(current_pkg))
-            except ModuleNotFoundError:
-                pass
-    return result
 
-def get_submodule_names(package) -> List:
+def import_submodules(package, recursive=True):
     """
-    Retrieves the submodules under given package.
-    :param package: The package.
-    :type package: Package
-    :return: The list of modules.
-    :rtype: List
+    Imports all submodules of a module, recursively, including subpackages.
+    :param package: package (name or actual module)
+    :type package: str | module
+    :rtype: dict[str, types.ModuleType]
     """
-    result = []
-    for importer, pkg, ispkg in pkgutil.iter_modules(package.__path__):
-        if not ispkg:
-            result.append(pkg)
-    return result
+    if isinstance(package, str):
+        package = __import__(package, fromlist=[''])
 
-def get_submodules(package) -> List:
-    """
-    Retrieves the submodules under given package.
-    :param package: The package.
-    :type package: Package
-    :return: The list of modules.
-    :rtype: List
-    """
-    result = []
-    for importer, pkg, ispkg in pkgutil.iter_modules(package.__path__):
-        if not ispkg:
-            loader = importer.find_module(pkg)
-            try:
-                current_pkg = loader.load_module(pkg)
-                result.append(current_pkg)
-            except ModuleNotFoundError:
-                pass
-    return result
+    results = {}
+
+    for loader, name, is_pkg in pkgutil.walk_packages(package.__path__):
+        full_name = package.__name__ + '.' + name
+
+        results[full_name] = __import__(full_name, fromlist=[''])
+
+        if recursive and is_pkg:
+            results.update(import_submodules(full_name))
+
+    return results
