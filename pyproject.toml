@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pythoneda-application-base"
-version = "0.0.1a12"
+version = "0.0.1a13"
 description = "Common classes for application layers of PythonEDA projects"
 authors = ["rydnr <github@acm-sl.org>"]
 readme = "README.md"
